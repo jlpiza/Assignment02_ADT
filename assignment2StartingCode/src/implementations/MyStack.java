@@ -16,15 +16,13 @@ public class MyStack<E> implements StackADT<E> {
     public void push(E toAdd) throws NullPointerException {
         if (toAdd == null)
             throw new NullPointerException("Cannot push null onto stack.");
-
-        list.add(toAdd); // add to end = top of stack
+        list.add(toAdd);
     }
 
     @Override
     public E pop() throws EmptyStackException {
         if (isEmpty())
             throw new EmptyStackException();
-
         return list.remove(list.size() - 1);
     }
 
@@ -32,7 +30,6 @@ public class MyStack<E> implements StackADT<E> {
     public E peek() throws EmptyStackException {
         if (isEmpty())
             throw new EmptyStackException();
-
         return list.get(list.size() - 1);
     }
 
@@ -46,14 +43,41 @@ public class MyStack<E> implements StackADT<E> {
         return list.isEmpty();
     }
 
+
     @Override
     public Object[] toArray() {
-        return list.toArray();
+        Object[] arr = new Object[list.size()];
+        int topIndex = list.size() - 1;
+
+        for (int i = 0; i < list.size(); i++) {
+            arr[i] = list.get(topIndex - i); 
+        }
+        return arr;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public E[] toArray(E[] holder) throws NullPointerException {
-        return list.toArray(holder);
+        if (holder == null)
+            throw new NullPointerException("Holder array cannot be null.");
+
+        int size = list.size();
+
+        if (holder.length < size) {
+            holder = (E[]) java.lang.reflect.Array
+                    .newInstance(holder.getClass().getComponentType(), size);
+        }
+
+        int topIndex = size - 1;
+
+        for (int i = 0; i < size; i++) {
+            holder[i] = list.get(topIndex - i);
+        }
+
+        if (holder.length > size)
+            holder[size] = null;
+
+        return holder;
     }
 
     @Override
@@ -63,9 +87,9 @@ public class MyStack<E> implements StackADT<E> {
 
     @Override
     public int search(E toFind) {
-        if (toFind == null) return -1;
+        if (toFind == null)
+            return -1;
 
-        // top = last element, position 1
         for (int i = list.size() - 1, pos = 1; i >= 0; i--, pos++) {
             if (toFind.equals(list.get(i)))
                 return pos;
@@ -73,9 +97,41 @@ public class MyStack<E> implements StackADT<E> {
         return -1;
     }
 
+
     @Override
     public Iterator<E> iterator() {
-        return list.iterator();
+        return new StackIterator();
+    }
+
+    private class StackIterator implements Iterator<E> {
+
+        private Object[] snapshot;
+        private int index = 0;
+
+        public StackIterator() {
+            Object[] normal = list.toArray();
+            snapshot = new Object[normal.length];
+
+            int topIndex = normal.length - 1;
+
+            for (int i = 0; i < normal.length; i++) {
+                snapshot[i] = normal[topIndex - i];
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < snapshot.length;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public E next() {
+            if (!hasNext()) {
+                throw new java.util.NoSuchElementException();
+            }
+            return (E) snapshot[index++];
+        }
     }
 
     @Override
@@ -100,7 +156,6 @@ public class MyStack<E> implements StackADT<E> {
 
     @Override
     public boolean stackOverflow() {
-        return false; // no fixed capacity
+        return false;
     }
 }
-

@@ -14,23 +14,26 @@ public class MyStack<E> implements StackADT<E> {
 
     @Override
     public void push(E toAdd) throws NullPointerException {
-        if (toAdd == null)
+        if (toAdd == null) {
             throw new NullPointerException("Cannot push null onto stack.");
-        list.add(toAdd);
+        }
+        list.add(toAdd); 
     }
 
     @Override
     public E pop() throws EmptyStackException {
-        if (isEmpty())
+        if (isEmpty()) {
             throw new EmptyStackException();
-        return list.remove(list.size() - 1);
+        }
+        return list.remove(list.size() - 1); 
     }
 
     @Override
     public E peek() throws EmptyStackException {
-        if (isEmpty())
+        if (isEmpty()) {
             throw new EmptyStackException();
-        return list.get(list.size() - 1);
+        }
+        return list.get(list.size() - 1); 
     }
 
     @Override
@@ -43,109 +46,107 @@ public class MyStack<E> implements StackADT<E> {
         return list.isEmpty();
     }
 
-
     @Override
     public Object[] toArray() {
-        Object[] arr = new Object[list.size()];
-        int topIndex = list.size() - 1;
-
+        // Return in stack order (top to bottom) - LIFO
+        Object[] array = new Object[list.size()];
         for (int i = 0; i < list.size(); i++) {
-            arr[i] = list.get(topIndex - i); 
+            array[i] = list.get(list.size() - 1 - i);
         }
-        return arr;
+        return array;
     }
 
+    /**
+     * Returns an array containing all elements in this collection in proper sequence.
+     * The runtime type of the returned array is that of the specified array.
+     * 
+     * @param holder the array into which elements are to be stored
+     * @return an array containing all elements in this collection
+     * @throws NullPointerException if the specified array is null
+     */
     @Override
     @SuppressWarnings("unchecked")
+    // This cast is safe because:
+    // 1. We create the array using Array.newInstance() with the exact component type
+    // 2. All elements added to the array are of type E (enforced by the collection)
+    // 3. The array is populated only with elements from this collection
+    // 4. The collection's generic type ensures type safety of stored elements
     public E[] toArray(E[] holder) throws NullPointerException {
-        if (holder == null)
+        if (holder == null) {
             throw new NullPointerException("Holder array cannot be null.");
-
+        }
+        
         int size = list.size();
-
         if (holder.length < size) {
-            holder = (E[]) java.lang.reflect.Array
-                    .newInstance(holder.getClass().getComponentType(), size);
+            holder = (E[]) java.lang.reflect.Array.newInstance(
+                holder.getClass().getComponentType(), size);
         }
-
-        int topIndex = size - 1;
-
+        
+        // Fill in stack order (top to bottom) - LIFO
         for (int i = 0; i < size; i++) {
-            holder[i] = list.get(topIndex - i);
+            holder[i] = list.get(size - 1 - i);
         }
-
-        if (holder.length > size)
-            holder[size] = null;
-
+        
+        // Set remaining to null if array was larger
+        if (holder.length > size) {
+            for (int i = size; i < holder.length; i++) {
+                holder[i] = null;
+            }
+        }
+        
         return holder;
     }
 
     @Override
     public boolean contains(E toFind) throws NullPointerException {
+        if (toFind == null) {
+            throw new NullPointerException("Cannot search for null element.");
+        }
         return list.contains(toFind);
     }
 
     @Override
     public int search(E toFind) {
-        if (toFind == null)
+        if (toFind == null) {
             return -1;
-
-        for (int i = list.size() - 1, pos = 1; i >= 0; i--, pos++) {
-            if (toFind.equals(list.get(i)))
-                return pos;
+        }
+        
+        // Search from top (end of list) to bottom (start of list)
+        // Returns 1-based position from top
+        for (int i = list.size() - 1; i >= 0; i--) {
+            if (toFind.equals(list.get(i))) {
+                return list.size() - i;
+            }
         }
         return -1;
     }
-
 
     @Override
     public Iterator<E> iterator() {
         return new StackIterator();
     }
 
-    private class StackIterator implements Iterator<E> {
-
-        private Object[] snapshot;
-        private int index = 0;
-
-        public StackIterator() {
-            Object[] normal = list.toArray();
-            snapshot = new Object[normal.length];
-
-            int topIndex = normal.length - 1;
-
-            for (int i = 0; i < normal.length; i++) {
-                snapshot[i] = normal[topIndex - i];
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return index < snapshot.length;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public E next() {
-            if (!hasNext()) {
-                throw new java.util.NoSuchElementException();
-            }
-            return (E) snapshot[index++];
-        }
-    }
-
     @Override
     public boolean equals(StackADT<E> that) {
-        if (that == null || this.size() != that.size()) return false;
+        if (that == null || this.size() != that.size()) {
+            return false;
+        }
 
         Iterator<E> it1 = this.iterator();
         Iterator<E> it2 = that.iterator();
 
         while (it1.hasNext() && it2.hasNext()) {
-            if (!it1.next().equals(it2.next()))
+            E elem1 = it1.next();
+            E elem2 = it2.next();
+            
+            // Handle null elements
+            if (elem1 == null && elem2 == null) {
+                continue;
+            }
+            if (elem1 == null || elem2 == null || !elem1.equals(elem2)) {
                 return false;
+            }
         }
-
         return true;
     }
 
@@ -156,6 +157,30 @@ public class MyStack<E> implements StackADT<E> {
 
     @Override
     public boolean stackOverflow() {
-        return false;
+        return false; // ArrayList-based stack never overflows
+    }
+
+    /**
+     * Iterator for stack (top to bottom order - LIFO)
+     */
+    private class StackIterator implements Iterator<E> {
+        private int currentIndex;
+        
+        public StackIterator() {
+            this.currentIndex = list.size() - 1;
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return currentIndex >= 0;
+        }
+        
+        @Override
+        public E next() {
+            if (!hasNext()) {
+                throw new java.util.NoSuchElementException("No more elements in stack");
+            }
+            return list.get(currentIndex--);
+        }
     }
 }

@@ -13,30 +13,52 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * XML Parser implementation based on Kitty's Algorithm for validating XML document structure.
+ * This parser checks for proper tag nesting, matching, and well-formedness according to XML standards.
+ * It uses custom stack and queue implementations to track tags and report validation errors.
+ * 
+ */
 public class XMLParser {
     private StackADT<TagInfo> tagStack;
     private QueueADT<TagInfo> errorQ;
     private QueueADT<TagInfo> extrasQ;
     private List<String> errorMessages;
     
-    // Regex patterns
+    // Regex patterns for XML tag detection
     private static final Pattern START_TAG_PATTERN = Pattern.compile("<([a-zA-Z][a-zA-Z0-9_-]*)(\\s[^>]*)?>");
     private static final Pattern END_TAG_PATTERN = Pattern.compile("</([a-zA-Z][a-zA-Z0-9_-]*)>");
     private static final Pattern SELF_CLOSING_TAG_PATTERN = Pattern.compile("<([a-zA-Z][a-zA-Z0-9_-]*)(\\s[^>]*)?/>");
     private static final Pattern PROCESSING_INSTRUCTION_PATTERN = Pattern.compile("<\\?xml[^?]*\\?>");
     
-    // Helper class to track tag information
+    /**
+     * Helper class to store tag information including name, original text, and line number.
+     * Used for accurate error reporting and tracking tag context.
+     */
     private static class TagInfo {
         String tagName;
         String originalTag;
         int lineNumber;
         
+        /**
+         * Constructs a TagInfo object with tag details.
+         * 
+         * @param tagName the extracted tag name without attributes
+         * @param originalTag the complete original tag text
+         * @param lineNumber the line number where the tag was found
+         */
         TagInfo(String tagName, String originalTag, int lineNumber) {
             this.tagName = tagName;
             this.originalTag = originalTag;
             this.lineNumber = lineNumber;
         }
         
+        /**
+         * Compares two TagInfo objects for equality based on tag name only.
+         * 
+         * @param obj the object to compare with
+         * @return true if tag names are equal, false otherwise
+         */
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
@@ -45,12 +67,21 @@ public class XMLParser {
             return tagName.equals(that.tagName);
         }
         
+        /**
+         * Returns string representation of the tag information.
+         * 
+         * @return the tag name as string
+         */
         @Override
         public String toString() {
             return tagName;
         }
     }
     
+    /**
+     * Constructs a new XMLParser with empty data structures.
+     * Initializes the tag stack, error queue, extras queue, and error messages list.
+     */
     public XMLParser() {
         this.tagStack = new MyStack<>();
         this.errorQ = new MyQueue<>();
@@ -58,6 +89,14 @@ public class XMLParser {
         this.errorMessages = new ArrayList<>();
     }
     
+    /**
+     * Parses an XML file and validates its structure.
+     * Reads the file line by line, processes all tags, and checks for well-formedness.
+     * 
+     * @param filename the path to the XML file to parse
+     * @return true if XML is well-formed, false if validation errors are found
+     * @throws IOException if the file cannot be read or accessed
+     */
     public boolean parseFile(String filename) throws IOException {
         tagStack.clear();
         errorQ.dequeueAll();
@@ -78,6 +117,12 @@ public class XMLParser {
         return processQueues();
     }
     
+    /**
+     * Processes a single line of XML content, extracting all tags and their line numbers.
+     * 
+     * @param line the line of text to process
+     * @param lineNumber the current line number in the file
+     */
     private void processLine(String line, int lineNumber) {
         Pattern tagPattern = Pattern.compile("<[^>]+>");
         Matcher matcher = tagPattern.matcher(line);
@@ -88,6 +133,13 @@ public class XMLParser {
         }
     }
     
+    /**
+     * Processes an individual XML tag according to Kitty's algorithm.
+     * Classifies the tag type and takes appropriate action.
+     * 
+     * @param tag the XML tag to process
+     * @param lineNumber the line number where the tag was found
+     */
     private void processTag(String tag, int lineNumber) {
         if (isProcessingInstruction(tag)) {
             return;
@@ -107,6 +159,14 @@ public class XMLParser {
         }
     }
     
+    /**
+     * Processes an end tag according to Kitty's algorithm rules.
+     * Handles tag matching, error reporting, and queue management.
+     * 
+     * @param endTagName the name of the end tag
+     * @param lineNumber the line number where the end tag was found
+     * @param originalTag the complete original end tag text
+     */
     private void processEndTag(String endTagName, int lineNumber, String originalTag) {
         try {
             if (!tagStack.isEmpty() && tagStack.peek().tagName.equals(endTagName)) {
@@ -133,6 +193,15 @@ public class XMLParser {
         }
     }
     
+    /**
+     * Searches the stack for a matching start tag when direct match fails.
+     * Handles intercrossed tag scenarios and reports errors for unmatched tags.
+     * 
+     * @param endTagName the end tag name to search for
+     * @param lineNumber the line number of the end tag
+     * @param originalTag the original end tag text
+     * @return true if matching start tag found in stack, false otherwise
+     */
     private boolean searchStackForMatch(String endTagName, int lineNumber, String originalTag) {
         StackADT<TagInfo> tempStack = new MyStack<>();
         boolean found = false;
@@ -169,6 +238,10 @@ public class XMLParser {
         return found;
     }
     
+    /**
+     * Processes any remaining tags in the stack after EOF.
+     * All remaining tags are considered errors (unclosed start tags).
+     */
     private void processRemainingStack() {
         while (!tagStack.isEmpty()) {
             try {
@@ -182,6 +255,11 @@ public class XMLParser {
         }
     }
     
+    /**
+     * Processes the error and extras queues to resolve remaining tag mismatches.
+     * 
+     * @return true if both queues are empty after processing, false otherwise
+     */
     private boolean processQueues() {
         while (!errorQ.isEmpty() || !extrasQ.isEmpty()) {
             if (errorQ.isEmpty() != extrasQ.isEmpty()) {
@@ -207,6 +285,10 @@ public class XMLParser {
         return errorMessages.isEmpty();
     }
     
+    /**
+     * Reports all remaining errors from both error and extras queues.
+     * Called when one queue has elements but the other is empty.
+     */
     private void reportQueueErrors() {
         while (!errorQ.isEmpty()) {
             try {
@@ -229,6 +311,12 @@ public class XMLParser {
         }
     }
     
+    /**
+     * Adds an error message to the error list, avoiding duplicates.
+     * 
+     * @param lineNumber the line number where the error occurred
+     * @param message the error message to add
+     */
     private void addErrorMessage(int lineNumber, String message) {
         // Avoid duplicate error messages
         String errorMsg = "Error at line: " + lineNumber + " " + message;
@@ -237,6 +325,12 @@ public class XMLParser {
         }
     }
     
+    /**
+     * Returns a formatted string containing all validation errors found during parsing.
+     * If no errors were found, returns a success message.
+     * 
+     * @return formatted error message or success confirmation
+     */
     public String getErrorMessage() {
         if (errorMessages.isEmpty()) {
             return "XML document is constructed correctly.";
@@ -249,26 +343,57 @@ public class XMLParser {
         return errorMsg.toString();
     }
     
-    // Helper methods
+    // Helper methods for tag classification
+    
+    /**
+     * Checks if a tag is an XML processing instruction.
+     * 
+     * @param tag the tag to check
+     * @return true if the tag is a processing instruction, false otherwise
+     */
     private boolean isProcessingInstruction(String tag) {
         return PROCESSING_INSTRUCTION_PATTERN.matcher(tag).matches();
     }
     
+    /**
+     * Checks if a tag is self-closing.
+     * 
+     * @param tag the tag to check
+     * @return true if the tag is self-closing, false otherwise
+     */
     private boolean isSelfClosingTag(String tag) {
         return SELF_CLOSING_TAG_PATTERN.matcher(tag).matches() || 
                tag.trim().endsWith("/>");
     }
     
+    /**
+     * Checks if a tag is a start tag (opening tag).
+     * 
+     * @param tag the tag to check
+     * @return true if the tag is a start tag, false otherwise
+     */
     private boolean isStartTag(String tag) {
         return START_TAG_PATTERN.matcher(tag).matches() && 
                !tag.startsWith("</") && 
                !isSelfClosingTag(tag);
     }
     
+    /**
+     * Checks if a tag is an end tag (closing tag).
+     * 
+     * @param tag the tag to check
+     * @return true if the tag is an end tag, false otherwise
+     */
     private boolean isEndTag(String tag) {
         return END_TAG_PATTERN.matcher(tag).matches();
     }
     
+    /**
+     * Extracts the tag name from a complete XML tag, removing attributes and formatting.
+     * 
+     * @param tag the complete XML tag
+     * @return the extracted tag name without attributes or formatting
+     */
     private String extractTagName(String tag) {
         String cleanTag = tag.replaceAll("[<>/]", "").trim();
         int spaceIndex = cleanTag.indexOf(' ');

@@ -3,12 +3,29 @@ package appDomain;
 import java.io.IOException;
 
 /**
- * Main application class for XML Parser
- * Usage: java -jar Parser.jar filename.xml
+ * Main application class for the XML Parser command-line interface.
+ * This class serves as the entry point for the XML validation application,
+ * providing a command-line interface to validate XML files using the XMLParser.
+ * 
  */
 public class XMLParserApp {
     
+    /**
+     * Main method that serves as the entry point for the XML Parser application.
+     * Validates command-line arguments, processes the specified XML file,
+     * and displays validation results or error messages.
+     * 
+     * @param args command-line arguments; expects exactly one argument: the XML filename
+     * 
+     * Usage examples:
+     * <pre>
+     * java -jar Parser.jar sample1.xml
+     * java -jar Parser.jar C:\path\to\file.xml
+     * </pre>
+     * 
+     */
     public static void main(String[] args) {
+        // Validate command-line arguments
         if (args.length != 1) {
             System.out.println("Usage: java -jar Parser.jar <xmlfile>");
             System.out.println("Example: java -jar Parser.jar sample1.xml");

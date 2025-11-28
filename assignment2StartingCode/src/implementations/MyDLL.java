@@ -6,8 +6,12 @@ import java.util.NoSuchElementException;
 
 /**
  * MyDLL - Doubly Linked List implementation of ListADT
+ * Supports add, remove, get, set, contains, iteration, and array
+ * conversion while maintaining head/tail references for efficient additions/removals at either end.
+ * it also optimizes node traversal by deciding whether to start from the head or tail based on the index.
  * @param <E> the type of elements in this list
  */
+
 public class MyDLL<E> implements ListADT<E> {
     private MyDLLNode<E> head;
     private MyDLLNode<E> tail;

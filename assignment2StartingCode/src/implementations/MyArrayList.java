@@ -4,6 +4,15 @@ import java.util.NoSuchElementException;
 import utilities.Iterator;
 import utilities.ListADT;
 
+/*
+ * MyAList<E> Implementation
+ * This class provides a array-based list structure with
+ * operations such as add, get, set, remove, size, and clear.
+ * It uses a fixed initial capacity and manages resizing
+ * and element shifting.
+ * @param <E> The type of elements stored in this list
+ */
+
 public class MyArrayList<E> implements ListADT<E> {
 
     private static final int DEFAULT_CAPACITY = 10;

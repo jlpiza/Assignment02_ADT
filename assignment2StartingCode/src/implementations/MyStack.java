@@ -4,6 +4,15 @@ import java.util.EmptyStackException;
 import utilities.Iterator;
 import utilities.StackADT;
 
+/*
+ * MyStack<E> – Stack implementation backed by a dynamic MyArrayList.
+ * This class provides a LIFO (Last-In, First-Out) stack structure where
+ * elements are pushed and popped from the end of the underlying
+ * MyArrayList. 
+ * The implementation supports push, pop, peek, clear, contains, search,
+ * iteration (top to bottom), and array conversion.
+ */
+
 public class MyStack<E> implements StackADT<E> {
 
     private MyArrayList<E> list;

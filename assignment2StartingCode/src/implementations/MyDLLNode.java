@@ -2,8 +2,11 @@ package implementations;
 
 /**
  * Node class for MyDLL (Doubly Linked List)
+ * holds an element and links to the previous and next nodes.
+ * It provides getter/ setter methods for the elements and its links
  * @param <E> the type of element stored in the node
  */
+
 public class MyDLLNode<E> {
     private E element;
     private MyDLLNode<E> next;

@@ -4,6 +4,15 @@ import exceptions.EmptyQueueException;
 import utilities.Iterator;
 import utilities.QueueADT;
 
+/**
+ * MyQueue<E> – Queue implementation backed by a MyDLL doubly linked list.
+ * This class provides a FIFO (First-In, First-Out) queue structure using
+ * a MyDLL as the underlying storage.
+ * Elements are enqueued at the end of the list and dequeued from the front.
+ * The implementation has queue operations such as enqueue,
+ * dequeue, peek, contains, search, iteration, clearing the queue, and conversion to arrays.
+ */
+
 public class MyQueue<E> implements QueueADT<E> {
 
     private MyDLL<E> list;
